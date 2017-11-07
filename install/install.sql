@@ -1,5 +1,5 @@
 /*
- Install script for version 1.14.4.14
+ Install script for version 1.14.6.3
  */
 
 DROP TABLE IF EXISTS `cache`;
@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS `plugin`;
 DROP TABLE IF EXISTS `plugin_var`;
 DROP TABLE IF EXISTS `setting`;
 DROP TABLE IF EXISTS `sign_log`;
-DROP TABLE IF EXISTS `update_source`;
+DROP TABLE IF EXISTS `process`;
 
 CREATE TABLE IF NOT EXISTS `cache` (
   `k` varchar(32) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `cache` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `cron` (
-  `id` varchar(16) NOT NULL,
+  `id` varchar(64) NOT NULL,
   `enabled` tinyint(1) NOT NULL,
   `nextrun` int(10) unsigned NOT NULL,
   `order` tinyint(4) NOT NULL,
@@ -97,9 +97,6 @@ CREATE TABLE IF NOT EXISTS `plugin` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
-INSERT INTO `plugin` (`id`, `enable`, `name`, `version`) VALUES
-(1, 1, 'debug_info', '');
-
 CREATE TABLE IF NOT EXISTS `plugin_var` (
   `pluginid` varchar(64) NOT NULL,
   `key` varchar(32) NOT NULL DEFAULT '',
@@ -124,8 +121,8 @@ CREATE TABLE IF NOT EXISTS `sign_log` (
   KEY `uid` (`uid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `update_source` (
+CREATE TABLE IF NOT EXISTS `process` (
   `id` varchar(16) NOT NULL,
-  `path` varchar(128) NOT NULL,
+  `exptime` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

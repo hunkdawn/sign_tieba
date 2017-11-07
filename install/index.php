@@ -60,7 +60,7 @@ switch($_GET['step']){
 		$content .= '<p><span>数据库端口:</span><input type="text" name="db_port" value="3306" /></p>';
 		$content .= '<p><span>数据库用户名:</span><input type="text" name="db_username" value="root" /></p>';
 		$content .= '<p><span>数据库密码:</span><input type="password" name="db_password" /></p>';
-		$content .= '<p><span>数据库名:</span><input type="text" name="db_name" value="kk_sign" /></p>';
+		$content .= '<p><span>数据库名称:</span><input type="text" name="db_name" value="kk_sign" /></p>';
 		if(function_exists('mysql_pconnect')) $content .= '<p><span>&nbsp;</span><label><input type="checkbox" name="pconnect" value="1" /> 保持与数据库服务器的连接</label></p>';
 		$content .= '<br><p><span>管理员用户名:</span><input type="text" name="username" required /></p>';
 		$content .= '<p><span>管理员密码:</span><input type="password" name="password" required /></p>';
@@ -87,7 +87,7 @@ switch($_GET['step']){
 			$selected = mysql_select_db($db_name, $link);
 			if(!$selected) show_back('数据库配置', '错误：指定的数据库不可用</p><p>'.mysql_error());
 		}
-		mysql_query("SET character_set_connection=utf8, character_set_results=utf8, character_set_client=binary");
+		mysql_query("SET character_set_connection=utf8, character_set_results=utf8, character_set_client=binary",$link);
 		$syskey = random(32);
 		$username = addslashes($_POST['username']);
 		$password = md5($syskey.md5($_POST['password']).$syskey);
@@ -102,9 +102,9 @@ switch($_GET['step']){
 		if(!$version) show_back('正在安装', '安装脚本有误，请重新上传');
 		$err = runquery($install_script, $link);
 		if($err) show_back('正在安装', '安装过程出现错误:</p><p>'.$err);
-		mysql_query("INSERT INTO member SET username='{$username}', password='{$password}', email='{$email}'");
+		mysql_query("INSERT INTO member SET username='{$username}', password='{$password}', email='{$email}'",$link);
 		$uid = mysql_insert_id($link);
-		mysql_query("INSERT INTO member_setting SET uid='{$uid}', cookie=''");
+		mysql_query("INSERT INTO member_setting SET uid='{$uid}', cookie=''",$link);
 		saveSetting('block_register', 1);
 		saveSetting('jquery_mode', 2);
 		saveSetting('admin_uid', $uid);
@@ -123,7 +123,7 @@ switch($_GET['step']){
 		$content = '<?php'.PHP_EOL.'/* Auto-generated config file */'.PHP_EOL.'$_config = ';
 		$content .= var_export($_config, true).';'.PHP_EOL.'?>';
 		file_put_contents($config_file, $content);
-		$content = '<p>贴吧签到助手 已经成功安装！</p><p>要正常签到，请为脚本 cron.php 添加每分钟一次的计划任务。</p><p>系统默认关闭用户注册，如果有需要，请到后台启用用户注册功能。</p><br><p class="btns"><button onclick="location.href=\'../\';">登录 &raquo;</button>';
+		$content = '<p>贴吧签到助手 已经成功安装！</p><p>要正常签到，请为脚本 cron.php 添加每分钟一次的计划任务。</p><p>脚本 cron.php 计划任务的 key 在 cron.php 中设置。</p><p>系统默认关闭用户注册，如果有需要，请到后台启用用户注册功能。</p><br><p class="btns"><button onclick="location.href=\'../\';">登录 &raquo;</button>';
 		show_install_page('安装成功', $content);
 }
 
@@ -146,7 +146,7 @@ function show_status($status, $on_txt = 'On', $off_txt = 'Off'){
 
 function runquery($sql, $link){
 	$sql = str_replace("\r", "\n", $sql);
-	foreach(explode(";\n", $sql) as $query) {
+	foreach(explode(";\n", trim($sql)) as $query) {
 		$query = trim($query);
 		if(!$query) continue;
 		$ret = mysql_query($query, $link);

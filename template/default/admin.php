@@ -20,6 +20,7 @@ if(!defined('IN_ADMINCP')) exit();
 <li id="menu_template"><a href="#template">模板管理</a></li>
 <li id="menu_setting"><a href="#setting">系统设置</a></li>
 <li id="menu_mail"><a href="#mail">邮件群发</a></li>
+<li id="menu_cron"><a href="#cron">计划任务</a></li>
 <li id="menu_updater"><a href="#updater">检查更新</a></li>
 <li><a href="./">返回前台</a></li>
 </ul>
@@ -57,6 +58,13 @@ if(defined('AFENABLED')) echo '<a id="reset_failure_all" href="javascript:;" cla
 <p>当前域名：<?php echo $siteurl; ?></p>
 <p>
 <a href="admin.php?action=cloud_sync&formhash=<?php echo $formhash; ?>" class="btn red" onclick="return msg_win_action(this.href)">同步站点信息</a>
+<?php
+if(!getSetting('use_sae_api')){
+	echo '<a href="admin.php?action=use_sae_api&formhash='.$formhash.'" class="btn submit" onclick="return msg_redirect_action(this.href)">切换到 SAE API</a>';
+} else {
+	echo '<a href="admin.php?action=use_default_api&formhash='.$formhash.'" class="btn submit" onclick="return msg_redirect_action(this.href)">切换到默认 API</a>';
+}
+?>
 </p>
 <?php } else { ?>
 <p>没有在云平台注册，请尝试刷新本页面</p>
@@ -70,6 +78,8 @@ if(defined('AFENABLED')) echo '<a id="reset_failure_all" href="javascript:;" cla
 <p><input type="text" id="admin_uid" name="admin_uid" value="<?php echo getSetting('admin_uid'); ?>" /></p>
 <?php } ?>
 <p>功能增强:</p>
+<p><label><input type="checkbox" id="random_sign" name="random_sign" /> 使用随机签到模式</label></p>
+<p><label><input type="checkbox" id="multi_thread" name="multi_thread" /> 多线程签到 (Alpha, Nightly version only)</label></p>
 <p><label><input type="checkbox" id="account_switch" name="account_switch" /> 允许多用户切换</label></p>
 <p><label><input type="checkbox" id="autoupdate" name="autoupdate" /> 每天自动更新用户喜欢的贴吧 (稍占服务器资源)</label></p>
 <p>功能限制:</p>
@@ -100,6 +110,7 @@ if(defined('AFENABLED')) {
 <p><label><input type="checkbox" id="block_register" name="block_register" /> 彻底关闭新用户注册功能</label></p>
 <p><label><input type="checkbox" id="register_check" name="register_check" /> 启用内置的简单防恶意注册系统 (可能会导致无法注册)</label></p>
 <p><label><input type="checkbox" id="register_limit" name="register_limit" /> 限制并发注册 (开启后可限制注册机注册频率)</label></p>
+<p><input type="text" name="cron_pass" id="cron_pass" placeholder="cron执行密码 (留空为不需要)" /></p>
 <p><input type="text" name="invite_code" id="invite_code" placeholder="邀请码 (留空为不需要)" /></p>
 <p>jQuery 加载方式:</p>
 <p><label><input type="radio" name="jquery_mode" value="builtin" /> 使用程序自带的 jQuery 类库 (默认, 推荐)</label></p>
@@ -166,6 +177,21 @@ foreach($classes as $id=>$obj){
 <ul class="template-list">
 </ul>
 </div>
+<div id="content-cron" class="hidden">
+<h2>计划任务</h2>
+<p>你可以通过这个表格检查系统任务的运行状态。</p>
+<p>如果所有任务均处于队列中状态，证明您很可能没有添加计划任务。</p>
+<table>
+<thead><tr><td style="width: 40px">#</td><td>类型</td><td>计划任务脚本名</td><td>下次执行</td><td>当前状态</td></tr></thead>
+<tbody></tbody>
+</table>
+<p>
+<a href="admin.php?action=clear_cron&formhash=<?php echo $formhash; ?>" class="btn red" onclick="return msg_callback_action(this.href, load_cron)">清理无效任务</a>
+<?php
+if(defined('AFENABLED')) echo '<a href="admin.php?action=clear_cron_cache&formhash='.$formhash.'" class="btn red" onclick="return msg_callback_action(this.href, load_cron)">清理执行时间缓存</a>';
+?>
+</p>
+</div>
 <div id="content-updater" class="hidden">
 <style type="text/css">
 #content-updater .result { padding: 10px 15px; margin-bottom: 0; background: #efefef; }
@@ -193,7 +219,7 @@ if(getSetting('channel') == 'dev'){
 <p><button class="btn red">开始更新</button></p>
 </div>
 </div>
-<p class="copyright"><span class="mobile_hidden">贴吧签到助手 - Designed</span> by <a href="http://www.ikk.me" target="_blank">kookxiang</a>. 2013-2016 &copy; <a href="http://www.kookxiang.com" target="_blank">KK's Laboratory</a> - <a href="http://go.ikk.me/donate" target="_blank">赞助开发</a></p>
+<p class="copyright"><span class="mobile_hidden">贴吧签到助手 - Designed</span> by <a href="http://www.ikk.me" target="_blank">kookxiang</a>. 2013-<?php echo date('Y',time()); ?> &copy; <a href="http://www.hydd.cc" target="_blank">学园科技</a> &amp; <a href="http://www.kookxiang.com" target="_blank">KK's Laboratory</a> - <a href="http://go.ikk.me/donate" target="_blank">赞助开发</a><?php if(getSetting('beian_no')) echo ' | <a href="http://www.miibeian.gov.cn/" target="_blank" rel="nofollow">'.getSetting('beian_no').'</a>'; ?></p><script src="<?php echo jquery_path(); ?>"></script>
 </div>
 </div>
 <?php include template('widget/footer'); ?>

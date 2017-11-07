@@ -2,8 +2,10 @@
 if (!defined('IN_KKFRAME')) exit();
 
 class cloud {
-	const API_ROOT = 'http://api.ikk.me/reborn/';
-	const API_ROOT_HTTPS = 'https://api.ikk.me/reborn/';
+	const API_ROOT = 'http://api.kk.hydd.cc/';
+	const API_ROOT_HTTPS = 'http://api.kk.hydd.cc/';
+	const API_ROOT_SAE = 'http://sae.kk.hydd.cc/';
+	const UPDATE_URL = 'http://up.kk.hydd.cc/';
 	public static function init(){
 		list($id, $key) = self::_get_id_and_key();
 		if (!$id || !$key) define('CLOUD_NOT_INITED', true);
@@ -27,7 +29,7 @@ class cloud {
 		}
 	}
 	public static function get_api_path(){
-		return self::API_ROOT_HTTPS;
+		return getSetting('use_sae_api') ? self::API_ROOT_SAE : self::API_ROOT_HTTPS;
 	}
 	public static function sync(){
 		global $siteurl;

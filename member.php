@@ -140,7 +140,7 @@ EOF;
 			HOOK::run('before_register');
 			$uid = do_register($username, $_POST['password'], $email);
 			do_login($uid);
-			HOOK::run('register_finish', false, $uid);
+			HOOK::run('register_finish', $uid);
 			showmessage("注册成功，您的用户名是 <b>{$username}</b> 记住了哦~！", dreferer(), 3);
 		}
 	}
@@ -151,7 +151,7 @@ EOF;
 		$username = daddslashes($_POST['username']);
 		$un = strtolower($username);
 		if(strlen($username) > 24) showmessage('用户名过长，请修改', dreferer(), 5);
-		$user = DB::fetch_first("SELECT * FROM member WHERE username='{$username}'");
+		$user = DB::fetch_first("SELECT * FROM member WHERE username='{$username}' OR email='{$username}'");
 		$verified = Widget_Password::verify($user, $_POST['password']);
 		if($verified) {
 			$login_exp = TIMESTAMP + 3600;

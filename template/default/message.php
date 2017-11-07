@@ -1,5 +1,6 @@
 <?php
 if(!defined('IN_KKFRAME')) exit();
+$url = stristr($_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'],'plugins',true);
 ?>
 <!DOCTYPE html>
 <html>
@@ -11,7 +12,7 @@ if(!defined('IN_KKFRAME')) exit();
 html,code{font:15px/22px arial,sans-serif}
 html{background:#fff;color:#222;padding:15px}
 body{margin:7% auto 0;max-width:390px;min-height:220px;padding:75px 0 15px}
-* > body{background:url(template/default/style/msg_bg.png) 100% 5px no-repeat;padding-right:205px}
+* > body{background:url(<?php echo(!empty($url) ? '//' . $url : ''); ?>template/default/style/msg_bg.png) 100% 5px no-repeat;padding-right:205px}
 p{margin:11px 0 22px;overflow:hidden}
 ins, ins a{color:#777;text-decoration:none;font-size:10px;}
 a img{border:0}

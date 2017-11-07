@@ -1,5 +1,41 @@
 <?php
 if(!defined('IN_KKFRAME')) exit();
+
+function readCookies($str) {
+	preg_match("/set\-cookie:([^\r\n]*)/i", $str, $m1);
+		if (!empty($m1)) {
+			preg_match_all("/(.*?)=(.*?);/", $m1[1], $m2, PREG_SET_ORDER);
+			$r = array();
+			foreach ($m2 as $value) {
+				$r1 = trim($value[1]);
+				if ($r1 != 'expires' && $r1 != 'max-age' && $r1 != 'path' && $r1 != 'domain') {
+				$r = $r1 . '=' . trim($value[2]) . '; ';
+			}
+		}
+		return $r;
+	}
+}
+
+function _get_redirect_data($url, $cookie = '') {
+	$ch = curl_init($url);
+	curl_setopt($ch, CURLOPT_HEADER, true);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	if (!empty($cookie)) curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+	$data = curl_exec($ch);
+	$info = curl_getinfo($ch);
+	curl_close($ch);
+	if ($info['http_code'] == 200) {
+		$body = substr($data, $info['header_size']);
+		return $body;
+	} elseif ($info['http_code'] == 302) {
+		$header = substr($data, 0, $info['header_size']);
+		$cookie .= readCookies($header);
+		$url =  $info['redirect_url'];
+		return _get_redirect_data($url,$cookie);
+	}
+}
+
 function is_admin($uid){
 	return in_array($uid, explode(',', getSetting('admin_uid')));
 }
@@ -181,11 +217,11 @@ function get_cookie($uid){
 	static $cookie = array();
 	if($cookie[$uid]) return $cookie[$uid];
 	$cookie[$uid] = DB::result_first("SELECT cookie FROM member_setting WHERE uid='{$uid}'");
-	//$cookie[$uid] = strrev(str_rot13(pack('H*', $cookie[$uid])));
+	$cookie[$uid] = strrev(str_rot13(pack('H*', $cookie[$uid])));
 	return $cookie[$uid];
 }
 function save_cookie($uid, $cookie){
-	//$cookie = bin2hex(str_rot13(strrev(addslashes($cookie))));
+	$cookie = bin2hex(str_rot13(strrev(addslashes($cookie))));
 	DB::query("UPDATE member_setting SET cookie='{$cookie}' WHERE uid='{$uid}'");
 }
 function get_username($uid){
@@ -227,21 +263,21 @@ function runquery($sql){
 	}
 }
 function jquery_path(){
-	$path = defined('IN_ADMINCP') ? 0 : getSetting('jquery_mode');
+	$path = defined('IN_ADMINCP') ? 'builtin' : getSetting('jquery_mode');
 	switch($path){
 		case 'google':
-			return '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js';
+			return '//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js?version=' . VERSION;
 		case 'microsoft':
-			return '//ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.4.min.js';
+			return '//ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.4.min.js?version=' . VERSION;
 		case 'cloudflare':
-			return '//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js';
+			return '//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js?version=' . VERSION;
 		case 'jsdelivr':
-			return '//cdn.jsdelivr.net/jquery/1.12.4/jquery.min.js';
+			return '//cdn.jsdelivr.net/jquery/1.12.4/jquery.min.js?version=' . VERSION;
 		case 'lug-ustc':
-			return '//ajax.lug.ustc.edu.cn/ajax/libs/jquery/1.12.4/jquery.min.js';
-		default:
+			return '//ajax.lug.ustc.edu.cn/ajax/libs/jquery/1.12.4/jquery.min.js?version=' . VERSION;
 		case 'builtin':
-			return 'system/js/jquery.min.js';
+		default:
+			return 'system/js/jquery.min.js?version=' . VERSION;
 	}
 }
 function kk_fetch_url($url, $limit = 0, $post = '', $cookie = '', $ignore = FALSE, $ip = '', $timeout = 15, $block = TRUE, $encodetype  = 'URLENCODE', $allowcurl = TRUE, $position = 0) {

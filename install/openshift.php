@@ -13,6 +13,28 @@ if($_config){
 
 @touch($config_file);
 
+// MySQLi Support
+if (!function_exists('mysql_connect') && function_exists('mysqli_connect')) {
+    function mysql_connect($server = 'localhost', $username = 'root', $password = '', $new_link = false, $client_flags = 0) {
+        return mysqli_connect($server, $username, $password, '');
+    }
+    function mysql_insert_id($link = null) {
+        return mysqli_insert_id($link);
+    }
+    function mysql_select_db($db_name, $link = null) {
+        return mysqli_select_db($link, $db_name);
+    }
+    function mysql_query($db_name, $link = null) {
+        return mysqli_query($link, $db_name);
+    }
+    function mysql_error($link = null) {
+        return mysqli_error($link);
+    }
+    function mysql_errno($link = null) {
+        return mysqli_errno($link);
+    }
+}
+
 switch($_GET['step']){
 	default:
 		$content = '<p>欢迎使用 贴吧签到助手 安装向导！</p><p>本程序将会指引你在服务器上配置好“贴吧签到助手”</p><p>点击右侧的“下一步”按钮开始</p><br><p>Openshift one-key installer. Thanks to <a href="http://tieba.baidu.com/home/main?un=%D3%F4%C3%C6de%CB%B5" target="_blank">郁闷de说</a></p><p class="btns"><button onclick="location.href=\'./openshift.php?step=database\';">下一步 &raquo;</button>';
@@ -46,7 +68,7 @@ switch($_GET['step']){
 			$selected = mysql_select_db($db_name, $link);
 			if(!$selected) show_back('数据库配置', '错误：指定的数据库不可用</p><p>'.mysql_error());
 		}
-		mysql_query("SET character_set_connection=utf8, character_set_results=utf8, character_set_client=binary");
+		mysql_query("SET character_set_connection=utf8, character_set_results=utf8, character_set_client=binary",$link);
 		$syskey = random(32);
 		$username = addslashes($_POST['username']);
 		$password = md5($syskey.md5($_POST['password']).$syskey);
@@ -60,9 +82,9 @@ switch($_GET['step']){
 		$version = trim($match[1]);
 		if(!$version) show_back('正在安装', '安装脚本有误，请重新上传');
 		$err = runquery($install_script, $link);
-		mysql_query("INSERT INTO member SET username='{$username}', password='{$password}', email='{$email}'");
+		mysql_query("INSERT INTO member SET username='{$username}', password='{$password}', email='{$email}'",$link);
 		$uid = mysql_insert_id($link);
-		mysql_query("INSERT INTO member_setting SET uid='{$uid}', cookie=''");
+		mysql_query("INSERT INTO member_setting SET uid='{$uid}', cookie=''",$link);
 		saveSetting('block_register', 1);
 		saveSetting('jquery_mode', 2);
 		saveSetting('admin_uid', $uid);
@@ -82,7 +104,7 @@ switch($_GET['step']){
 		$content = '<?php'.PHP_EOL.'/* Auto-generated config file */'.PHP_EOL.'$_config = ';
 		$content .= var_export($_config, true).';'.PHP_EOL.'?>';
 		file_put_contents($config_file, $content);
-		$content = '<p>贴吧签到助手 已经成功安装！</p><p>系统默认关闭用户注册，如果有需要，请到后台启用用户注册功能。</p><p style="color: red">Openshift 用户如出现错误请前往管理界面重启应用</p><br><p class="btns"><button onclick="location.href=\'../\';">登录 &raquo;</button>';
+		$content = '<p>贴吧签到助手 已经成功安装！</p><p>要正常签到，请为脚本 cron.php 添加每分钟一次的计划任务。</p><p>脚本 cron.php 计划任务的 key 在 cron.php 中设置。</p><p>系统默认关闭用户注册，如果有需要，请到后台启用用户注册功能。</p><p style="color: red">Openshift 用户如出现错误请前往管理界面重启应用</p><br><p class="btns"><button onclick="location.href=\'../\';">登录 &raquo;</button>';
 		show_install_page('安装成功', $content);
 }
 

@@ -29,38 +29,37 @@ function _verify_cookie($cookie){
 
 function _get_baidu_userinfo($uid){
 	$cookie = get_cookie($uid);
-	if(!$cookie) return array('no' => 4);
-	$tbs_url = 'http://tieba.baidu.com/f/user/json_userinfo';
-	$ch = curl_init($tbs_url);
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Referer: http://tieba.baidu.com/'));
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-	$tbs_json = curl_exec($ch);
-	curl_close($ch);
-	$tbs_json = mb_convert_encoding($tbs_json, "utf8", "gbk");
-	return json_decode($tbs_json, true);
+	if (!empty($cookie)) {
+		if (stripos($cookie,'PTOKEN') === FALSE) return array('no' => 4);
+		$data = _get_redirect_data('http://tieba.baidu.com/f/user/json_userinfo',$cookie);
+		$json = mb_convert_encoding($data, "utf8", "gbk");
+		return json_decode($json, true);
+	} else {
+		return array('no' => -1);
+	}
 }
 
 function _get_liked_tieba($cookie){
+	if (stripos($cookie,'PTOKEN') === FALSE) showmessage('缺少 PTOKEN 无法获取账号信息，请通过 API 重新绑定！', './#guide');
 	$pn = 0;
 	$kw_name = array();
 	$retry = 0;
 	while (true){
 		$pn++;
-		$mylikeurl = "http://tieba.baidu.com/f/like/mylike?&pn=$pn";
-		$result = kk_fetch_url($mylikeurl, 0, '', $cookie);
+		$mylikeurl = "http://tieba.baidu.com/f/like/mylike?&pn={$pn}";
+		$result = _get_redirect_data($mylikeurl,$cookie);
 		$result = wrap_text($result);
-		$pre_reg = '/<tr><td>.*?<ahref="\/f\?kw=.*?"title="(.*?)"/';
+		$pre_reg = '/<tr><td>.*?<ahref="\/f\?kw=.*?"title="(.*?)"/i';
 		preg_match_all($pre_reg, $result, $matches);
+		preg_match_all('/balvid="([0-9]+)"/i', $result, $fid);
 		$count = 0;
 		foreach ($matches[1] as $key => $value) {
 			$uname = urlencode($value);
 			$_uname = preg_quote($value);
-			preg_match('/balvid="([0-9]+)"/i', $result, $fid);
 			$kw_name[] = array(
 				'name' => mb_convert_encoding($value, 'utf-8', 'gbk'),
 				'uname' => $uname,
-				'fid' => $fid[1],
+				'fid' => $fid[1][$count]
 			);
 			$count++;
 		}
@@ -248,23 +247,59 @@ function _client_sign_old($uid, $tieba){
 }
 
 function _zhidao_sign($uid){
-	$ch = curl_init('http://zhidao.baidu.com/submit/user');
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+	$cookie = get_cookie($uid);
+	$ua = 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36';
+	$header = array(
+		'User-Agent: ' . $ua,
+		'Referer: https://zhidao.baidu.com/'
+	);
+	$ch = curl_init('https://zhidao.baidu.com/api/loginInfo?t=' . TIMESTAMP . '000');
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_COOKIE, get_cookie($uid));
-	curl_setopt($ch, CURLOPT_POST, 1);
-	curl_setopt($ch, CURLOPT_POSTFIELDS, 'cm=100509&t='.TIMESTAMP);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 	$result = curl_exec($ch);
 	curl_close($ch);
-	return @json_decode($result);
+	$json = json_decode($result, true);
+	$stoken = !empty($json['stoken']) ? $json['stoken'] : '';
+
+	if ($stoken != '') {
+		$header = array(
+			'User-Agent: ' . $ua,
+			'X-ik-token: ' . $stoken,
+			'X-ik-ssl: 1',
+			'Referer: https://zhidao.baidu.com/'
+		);
+		$ch = curl_init('https://zhidao.baidu.com/submit/user');
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_COOKIE, $cookie);
+		curl_setopt($ch, CURLOPT_POST, true);
+		$post_data = array(
+			'cm' => 100509,
+			'stoken' => $stoken
+		);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+		$result = curl_exec($ch);
+		curl_close($ch);
+		$json = json_decode($result, true);
+	}
+
+	return $json;
 }
 
 function _wenku_sign($uid){
-	$ch = curl_init('http://wenku.baidu.com/task/submit/signin');
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 BIDUBrowser/2.x Safari/537.31'));
+	$header = array(
+		'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
+		'Referer: https://wenku.baidu.com/task/browse/daily'
+	);
+	$ch = curl_init('https://wenku.baidu.com/task/submit/signin');
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($ch, CURLOPT_COOKIE, get_cookie($uid));
 	$result = curl_exec($ch);
 	curl_close($ch);
-	return @json_decode($result);
+	return json_decode($result);
 }
