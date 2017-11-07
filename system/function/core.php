@@ -28,7 +28,7 @@ function _get_redirect_data($url, $cookie = '') {
 	if ($info['http_code'] == 200) {
 		$body = substr($data, $info['header_size']);
 		return $body;
-	} elseif ($info['http_code'] == 302) {
+	} elseif ($info['http_code'] == 301 || $info['http_code'] == 302) {
 		$header = substr($data, 0, $info['header_size']);
 		$cookie .= readCookies($header);
 		$url =  $info['redirect_url'];
@@ -292,7 +292,7 @@ function kk_fetch_url($url, $limit = 0, $post = '', $cookie = '', $ignore = FALS
 		$ip && curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: ".$host));
 		curl_setopt($ch, CURLOPT_URL, $scheme.'://'.($ip ? $ip : $host).':'.$port.$path);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		if($post) {
+		if(!empty($post)) {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			if($encodetype == 'URLENCODE') {
 				curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
@@ -301,7 +301,7 @@ function kk_fetch_url($url, $limit = 0, $post = '', $cookie = '', $ignore = FALS
 				curl_setopt($ch, CURLOPT_POSTFIELDS, $postarray);
 			}
 		}
-		if($cookie) {
+		if(!empty($cookie)) {
 			curl_setopt($ch, CURLOPT_COOKIE, $cookie);
 		}
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
