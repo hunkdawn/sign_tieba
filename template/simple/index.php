@@ -40,7 +40,7 @@ $title = $extra_title ? "贴吧签到助手 - {$extra_title}" : '贴吧签到助
 <?php include template('widget/bind_status'); ?>
 </div>
 <?php HOOK::page_contents(); ?>
-<p class="copyright"><span class="mobile_hidden">贴吧签到助手 - Designed</span> by <a href="http://www.ikk.me" target="_blank">kookxiang</a>. 2013-<?php echo date('Y',time()); ?> &copy; <a href="http://www.hydd.cc" target="_blank">学园科技</a> &amp; <a href="http://www.kookxiang.com" target="_blank">KK's Laboratory</a> - <a href="http://go.ikk.me/donate" target="_blank">赞助开发</a><?php if(getSetting('beian_no')) echo ' | <a href="http://www.miibeian.gov.cn/" target="_blank" rel="nofollow">'.getSetting('beian_no').'</a>'; ?></p>
+<p class="copyright"><span class="mobile_hidden">贴吧签到助手(<?php echo VERSION; ?>) - Designed</span> by <a href="http://www.ikk.me" target="_blank">kookxiang</a>. 2014-<?php echo date('Y',time()); ?> &copy; <a href="http://gakuen.me" target="_blank">Gakuen</a> &amp; <a href="http://www.kookxiang.com" target="_blank">KK's Laboratory</a> - <a href="http://go.ikk.me/donate" target="_blank">赞助开发</a><?php if(getSetting('beian_no')) echo ' | <a href="http://www.miibeian.gov.cn/" target="_blank" rel="nofollow">'.getSetting('beian_no').'</a>'; ?></p>
 </div>
 <?php include template('widget/footer'); ?>
 </body>
