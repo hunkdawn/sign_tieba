@@ -138,3 +138,6 @@
 .btn.red:hover {
 	color:red;
 }
+textarea,input {
+	opacity:0.5;
+}
