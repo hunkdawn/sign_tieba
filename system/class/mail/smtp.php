@@ -48,6 +48,7 @@ class _smtp {
 		$this->address = $obj->_get_setting('address');
 		$this->username = $obj->_get_setting('smtp_name');
 		$this->password = $obj->_get_setting('smtp_pass');
+		if ($this->port == '465') $this->smtpServer = 'ssl://' . $this->smtpServer;
 	}
 
 	public function send($to, $subject, $message) {
