@@ -7,9 +7,10 @@ class smtp extends mailer{
 	var $description = '通过 Socket 连接 SMTP 服务器发邮件';
 	var $config = array(
 		array('SMTP 服务器地址', 'smtp_server', '', ''),
-		array('发送者邮箱地址', 'address', '', '', 'email'),
+		array('SMTP 服务器端口', 'smtp_port', '', '25', 'number'),
 		array('SMTP 用户名', 'smtp_name', '', ''),
 		array('SMTP 密码', 'smtp_pass', '', '', 'password'),
+		array('发送者邮箱地址', 'address', '一般与 用户名 一致', '', 'email')
 	);
 	function isAvailable(){
 		return !isset($_SERVER['HTTP_APPVERSION']) && $_SERVER['USER'] != 'bae';
@@ -22,7 +23,7 @@ class smtp extends mailer{
 
 class _smtp {
 	private $smtpServer = '';
-	private $port = '25';
+	private $port = '';
 	private $timeout = '45';
 	private $username = '';
 	private $password = '';
@@ -43,6 +44,7 @@ class _smtp {
 
 	public function _smtp($obj){
 		$this->smtpServer = $obj->_get_setting('smtp_server');
+		$this->port = $obj->_get_setting('smtp_port');
 		$this->address = $obj->_get_setting('address');
 		$this->username = $obj->_get_setting('smtp_name');
 		$this->password = $obj->_get_setting('smtp_pass');
